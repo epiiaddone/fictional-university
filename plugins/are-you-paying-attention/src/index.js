@@ -29,7 +29,7 @@ import "./index.scss";
 })();
 
 
-//wp is a wordpress java libarary
+//wp is a wordpress javascript libarary
 wp.blocks.registerBlockType("ourplugin/are-you-paying-attention",
     {
         title: "Are You Paying Attention",

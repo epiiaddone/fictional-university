@@ -5,18 +5,62 @@
   Version: 1.0
   Author: Your Name Here
   Author URI: https://www.udemy.com/user/bradschiff/
+  Text Domain: featured-professor
+  Domain Path: /languages
 */
 
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+require_once plugin_dir_path(__FILE__) . 'inc/generateProfessorHTML.php';
+require_once plugin_dir_path(__FILE__) . 'inc/relatedPostsHTML.php';
+
 class FeaturedProfessor {
   function __construct() {
     add_action('init', [$this, 'onInit']);
+    add_action('rest_api_init', [$this, 'profHTML']);
+
+    //this will apply to all content on all pages
+    add_filter('the_content', [$this, 'addRelatedPosts']);
+  }
+
+  function addRelatedPosts($content){
+    if(is_singular('professor') && in_the_loop() && is_main_query()){
+      return $content . relatedPostsHTML(get_the_id());
+    }else{
+      return $content;
+    }
+  }
+
+  function profHTML(){
+    register_rest_route('featuredProfessor/v1', 'getHTML', array(
+      'methods'=> WP_REST_SERVER::READABLE,
+      'callback'=> [$this, 'getProfHTML']
+    ));
+  }
+
+  function getProfHTML($data){
+    return  generate_professor_html($data['profId']);
   }
 
   function onInit() {
+
+    load_plugin_textdomain('featured-professor', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    
+    register_meta(
+      'post',// or comment or user
+    'featuredProfessor',//must match js
+     array(
+      'show_in_rest'=> true,
+      'type' => 'number',
+      'single'=> false //multiple rows are possible
+     )
+    );
+
     wp_register_script('featuredProfessorScript', plugin_dir_url(__FILE__) . 'build/index.js', array('wp-blocks', 'wp-i18n', 'wp-editor'));
     wp_register_style('featuredProfessorStyle', plugin_dir_url(__FILE__) . 'build/index.css');
+
+    //for loco translate
+    wp_set_script_translations('featuredProfessorScript', 'featured-professor', plugin_dir_path(__FILE__) . '/languages');
 
     register_block_type('ourplugin/featured-professor', array(
       'render_callback' => [$this, 'renderCallback'],
@@ -26,7 +70,11 @@ class FeaturedProfessor {
   }
 
   function renderCallback($attributes) {
-    return '<p>We will replace this content soon.</p>';
+    if(!$attributes['profId']) return NULL;
+
+    wp_enqueue_style('featuredProfessorStyle');
+
+    return generate_professor_html($attributes['profId']);
   }
 
 }

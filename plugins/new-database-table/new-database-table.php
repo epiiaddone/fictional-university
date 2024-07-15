@@ -30,17 +30,48 @@ class PetAdoptionTablePlugin {
     //<input type="hidden" name="action" value="createpet"/>
     add_action('admin_post_createpet', array($this, 'createPet'));
 
+    //<input type="hidden" name="action" value="deletepet"/>
+    add_action('admin_post_deletepet', array($this, 'deletePet'));
+
     //similar to content filter
     add_filter('template_include', array($this, 'loadTemplate'), 99);
   }
 
+  function deletePet(){
+    if(!isset($_POST['idtodelete'])){      
+      wp_safe_redirect(site_url('/pet-adoption'));
+      exit("invalid id to delete");
+    }
+    if(!current_user_can('administrator')){
+      wp_safe_redirect(site_url);
+      exit("only admin can delete");
+    }
+     
+      $idToDelete = sanitize_text_field($_POST['idtodelete']);           
+
+      global $wpdb;
+      $deleteResult = $wpdb->delete($this->tablename, array('id'=>$idToDelete));
+
+      if(!$deleteResult){
+        echo nl2br("delete fail \n");
+        echo nl2br("\n \n query: \n");
+        print_r($wpdb->last_query);
+        echo nl2br("\n \n error: \n");
+        print_r($wpdb->last_error);        
+      }else{
+        wp_safe_redirect(site_url('/pet-adoption'));
+        exit;
+      }   
+  }
 
   function createPet(){
      if(!isset($_POST['incomingpetname'])){      
-      wp_redirect(site_url('/pet-adoption'));
+      wp_safe_redirect(site_url('/pet-adoption'));
+      exit;
     }
     if(!current_user_can('administrator')){
-      wp_redirect(site_url);
+      wp_safe_redirect(site_url);
+      exit;
     }
     
       $pet = generatePet();
@@ -63,7 +94,8 @@ class PetAdoptionTablePlugin {
         print_r($wpdb->last_error);
         
       }else{
-        wp_redirect(site_url('/pet-adoption'));
+        wp_safe_redirect(site_url('/pet-adoption'));
+        exit;
       }      
   }
 

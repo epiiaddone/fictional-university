@@ -68,13 +68,16 @@ function EditComponent(props) {
   return (
     <div className="featured-professor-wrapper">
       <div className="professor-select-container">
-        <select onChange={e => props.setAttributes({ profId: e.target.value })}>
+        <select
+          onChange={e => props.setAttributes({ profId: e.target.value })}
+          value={props.attributes.profId}
+        >
           <option value="">{__('Select a professor', 'featured-professor')}</option>
           {allProfs.map(prof => {
             return (
               <option
                 value={prof.id}
-                selected={props.attributes.profId == prof.id}
+                //selected={props.attributes.profId == prof.id}
                 key={prof.id}
               >
                 {prof.title.rendered}
